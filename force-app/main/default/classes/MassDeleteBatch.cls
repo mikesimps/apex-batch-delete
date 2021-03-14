@@ -6,17 +6,19 @@
 *              Database.executeBatch(new MassDeleteBatch()); 
 *
 * CHANGE LOG
+* 2019-01 - Mike Simpson - Add Invocable Method to use with Mass Action Scheduler
 **/
 public class MassDeleteBatch implements Database.Batchable<SObject> {
+
+    @InvocableMethod(label='Mass Delete Unused Volunteer Hours' description='Deletes incomplete Super Geek records older than a week')
+    public static void CallMassDeleteBatch() {
+        Database.executeBatch(new MassDeleteBatch('Volunteer_Hours__c'));
+    }
 
     // Add objects to this list to chain through objects and clear out all records
     // Ensure to put child objects first, and ones that cause deletes to fail.
     public static final List<String> OBJECT_NAMES = new List<String>{
-        'Case',
-        'Opportunity',
-        'Order',
-        'Contact',
-        'Account'
+        'Volunteer_Hours__c'
     };
 
     // The current object name being run within the batch
@@ -35,7 +37,7 @@ public class MassDeleteBatch implements Database.Batchable<SObject> {
 
     // Query for all records in the current object
     public Database.QueryLocator start(Database.BatchableContext BC) {
-        return Database.getQueryLocator('SELECT Id FROM ' + currentObjectName);
+        return Database.getQueryLocator('SELECT Id FROM ' + currentObjectName + ' WHERE Status__c = \'Confirmed\' and Volunteer_Job__r.Name = \'SUPER GEEK\' and Volunteer_Shift__r.Start_Date_Time__c < THIS_WEEK');
     }
 
     // Delete all records for the given scope
